@@ -1,8 +1,8 @@
 package com.br.upload.files.controller;
 
 import com.br.upload.files.message.ResponseMessage;
-import com.br.upload.files.model.InformacoesDoArquivo;
-import com.br.upload.files.service.CargaDeArquivosService;
+import com.br.upload.files.model.DetailsFiles;
+import com.br.upload.files.service.LoadFilesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,17 +19,16 @@ import java.util.stream.Collectors;
 
 @Controller
 @CrossOrigin("http://localhost:8081")
-public class CargaDeArquivosController {
+public class LoadFilesController {
 
     @Autowired
-    CargaDeArquivosService storageService;
+    LoadFilesService storageService;
 
     @PostMapping(value="/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseMessage> uploadFile(@RequestParam("file") MultipartFile file) {
         String message = "";
         try {
             storageService.save(file);
-
             message = "Arquivo carregado com sucesso: " + file.getOriginalFilename();
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
         } catch (Exception e) {
@@ -39,13 +38,13 @@ public class CargaDeArquivosController {
     }
 
     @GetMapping("/files")
-    public ResponseEntity<List<InformacoesDoArquivo>> getListFiles() {
-        List<InformacoesDoArquivo> fileInfos = storageService.loadAll().map(path -> {
+    public ResponseEntity<List<DetailsFiles>> getListFiles() {
+        List<DetailsFiles> fileInfos = storageService.loadAll().map(path -> {
             String filename = path.getFileName().toString();
             String url = MvcUriComponentsBuilder
-                    .fromMethodName(CargaDeArquivosController.class, "getFile", path.getFileName().toString()).build().toString();
+                    .fromMethodName(LoadFilesController.class, "getFile", path.getFileName().toString()).build().toString();
 
-            return new InformacoesDoArquivo(filename, url);
+            return new DetailsFiles(filename, url);
         }).collect(Collectors.toList());
 
         return ResponseEntity.status(HttpStatus.OK).body(fileInfos);
